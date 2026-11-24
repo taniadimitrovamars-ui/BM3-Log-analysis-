@@ -270,13 +270,14 @@ function vOne(){
   return`
   <div class="row sp card"><div class="row"><span class="m">Активен лог:</span>${['A','B'].map(k=>`<button class="sm ${S.act===k?'on':''}" data-act="${k}">${k==='A'?'А':'Б'}</button>`).join('')}</div>
     <span class="m mono">${m.reduce((a,b)=>a+b,0)} / ${L.n} семпъла · ${L.dur.toFixed(1)}s · ${L.unit}</span></div>
+  <div class="m" style="margin:-4px 0 10px">Картите и събитията са за избрания режим (<b>${E(MODES[S.mode])}</b>); таблицата с пуловете е винаги по целия лог.</div>
   <div class="grid g4" style="margin-bottom:12px">
     <div class="card" style="margin:0"><div class="k">Макс. RPM</div><div class="v">${fx(mr,0)}</div></div>
     <div class="card" style="margin:0"><div class="k">Макс. буст</div><div class="v A">${fx(mb,2)}</div><div class="m">цел ${fx(mt,2)} ${L.unit}</div></div>
     <div class="card" style="margin:0"><div class="k">Най-лош аванс</div><div class="v ${cls(w)}">${fx(w,2,'°')}</div></div>
     <div class="card" style="margin:0"><div class="k">Макс. IAT</div><div class="v mid">${fx(mi,1,'°C')}</div><div class="m">HPFP мин ${fx(mh,0)} ${L.hu}</div></div>
   </div>
-  ${L.pulls.length?`<div class="card"><div class="row sp"><h3>Пълна газ (пулове: ${L.pulls.length})</h3>${pullOpts(S.act)}</div><div class="sc"><table><tr><th>#</th><th>Време</th><th>RPM</th><th>Пик буст</th><th>Дефицит</th><th>Аванс</th><th>HPFP Δ</th><th>IAT</th></tr>${L.pulls.map((p,i)=>`<tr class="pk" data-p="${i}"><td>${i+1}</td><td>${fx(p.t0,1)}–${fx(p.t1,1)}s</td><td>${fx(p.r0,0)}→${fx(p.r1,0)}</td><td>${fx(p.pk,1)}</td><td>${fx(p.gap,2)}</td><td class="${cls(p.w)}">${fx(p.w,1,'°')}</td><td>${fx(p.hd,1,'%')}</td><td>${fx(p.i0,0)}→${fx(p.i1,0)}°</td></tr>`).join('')}</table></div></div>`:''}
+  ${L.pulls.length?`<div class="card"><div class="row sp"><h3>Пълна газ (пулове: ${L.pulls.length})</h3>${pullOpts(S.act)}</div><div class="sc"><table><tr><th>#</th><th>Време</th><th>RPM</th><th>Пик буст (psi)</th><th>Дефицит (psi)</th><th>Аванс</th><th>HPFP Δ</th><th>IAT</th></tr>${L.pulls.map((p,i)=>`<tr class="pk" data-p="${i}"><td>${i+1}</td><td>${fx(p.t0,1)}–${fx(p.t1,1)}s</td><td>${fx(p.r0,0)}→${fx(p.r1,0)}</td><td>${fx(p.pk,1)}</td><td>${fx(p.gap,2)}</td><td class="${cls(p.w)}">${fx(p.w,1,'°')}</td><td>${fx(p.hd,1,'%')}</td><td>${fx(p.i0,0)}→${fx(p.i1,0)}°</td></tr>`).join('')}</table></div></div>`:''}
   <div class="grid g2"><div class="card" style="margin:0"><h3>Корекции по цилиндри</h3><div class="grid" style="grid-template-columns:repeat(4,1fr)">${cyl||'<span class="m">Няма колони за аванс</span>'}</div></div>
   <div class="card" style="margin:0"><h3>Събития (${shown})</h3><p class="m" style="margin:0">Сигнали за наблюдение, не окончателна диагноза. Праг на аванса: -3°.</p></div></div>
   <div style="margin-top:12px">${ev.length?ev.map((e,n)=>`<div class="ev ${e.s}"><div class="row sp"><span class="tag">${E(e.cat)}</span><span class="mono m">${E(e.at)}</span></div><b>${E(e.ti)}</b><div class="m">${E(e.tx)}</div><ul>${e.h.map(h=>'<li>'+E(h)+'</li>').join('')}</ul>${e.i>=0?`<button class="sm" style="margin-top:8px" data-ev="${n}">Покажи на графиката →</button>`:''}</div>`).join(''):'<div class="ev info"><b>Няма засечени отклонения по наличните правила</b><div class="m">Резултатът зависи от наличните канали и режима.</div></div>'}</div>
@@ -295,7 +296,7 @@ function drawOne(){
 function vCmp(){
   const A=S.L.A,B=S.L.B;
   if(!A||!B)return`<div class="card"><h3>Нужни са два лога</h3><p class="m">Зареди Лог А и Лог Б (или „Пример“ и в двете). Сравнява се избран пул от всеки лог, а при липса на пулове — целият лог.</p></div>`;
-  const a=sel('A'),b=sel('B');let sa=0,sb=0;
+  const a=sel('A'),b=sel('B'),rpm=!!(A.rpm&&B.rpm),xLbl=rpm?'RPM':'време от началото на пула (s)';let sa=0,sb=0;
   const rows=[];
   const R=(l,x,y,f,win)=>{let s='',t='Информативно';
     if(win){const hi=win==='hi',u=x.v,v=y.v;if(u==null||v==null)t='Няма данни';else if(Math.abs(u-v)<(win==='hi'?.05:.05))t='Равни';else{const aw=hi?u>v:u<v;s=aw?'A':'B';t=aw?'Лог А':'Лог Б';aw?sa++:sb++}}
@@ -314,8 +315,8 @@ function vCmp(){
   return`<div class="card"><div class="row sp"><span class="tag" style="background:#38bdf8">СРАВНЕНИЕ</span><b>${hd}</b></div><p class="m">Точкуват се нормализирани показатели (аванс, % корекции, дефицит на буста, HPFP, IAT). За честно сравнение избери пул при сходни условия.</p>
   <div class="grid g2"><div><div class="k A">Лог А · ${E(S.L.A.name)}</div>${pullOpts('A')}</div><div><div class="k B">Лог Б · ${E(S.L.B.name)}</div>${pullOpts('B')}</div></div></div>
   <div class="card sc"><table><tr><th>Показател</th><th class="A">А</th><th class="B">Б</th><th>По-добре</th></tr>${rows.join('')}</table></div>
-  <div class="card"><h3>Буст (psi)</h3><div class="ro" id="d1R"></div><canvas id="d1"></canvas></div>
-  <div class="card"><h3>Най-лоша корекция (°)</h3><div class="ro" id="d2R"></div><canvas id="d2"></canvas></div>`;
+  <div class="card"><h3>Буст (psi) · ос X: ${xLbl}</h3><div class="ro" id="d1R"></div><canvas id="d1"></canvas></div>
+  <div class="card"><h3>Най-лоша корекция (°) · ос X: ${xLbl}</h3><div class="ro" id="d2R"></div><canvas id="d2"></canvas></div>`;
 }
 function drawCmp(){
   const A=S.L.A,B=S.L.B;if(!A||!B)return;
