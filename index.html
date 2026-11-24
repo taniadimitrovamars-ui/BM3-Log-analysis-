@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070b14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BM3 Lab">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<title>BM3 Lab — B48 анализатор на логове</title>
+<style>
+:root{--bg:#070b14;--p:#101726;--b:#1e293b;--t:#f1f5f9;--m:#94a3b8;--a:#009ada;--r:#f43f5e;--y:#f59e0b;--g:#10b981;--v:#a78bfa}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow-x:hidden}
+body{padding:var(--sat,0) 0 calc(2rem + env(safe-area-inset-bottom,0))}
+:root{--sat:env(safe-area-inset-top,0px)}
+header{position:sticky;top:0;z-index:5;background:#0b1220f2;backdrop-filter:blur(8px);border-bottom:1px solid var(--b);padding:calc(var(--sat) + 8px) 14px 8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+header:after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#009ada,#1c69d4,#e22718)}
+h1{font-size:16px;margin:0}h1 small{color:var(--m);font-weight:400;font-size:11px;margin-left:6px}
+main,.wrap{max-width:1100px;margin:0 auto;padding:12px 14px}
+button,select,.btn{font:inherit;min-height:42px;padding:0 13px;border-radius:12px;border:1px solid #334155;background:#1e293b;color:var(--t);cursor:pointer;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center}
+button.on{background:#009ada33;border-color:var(--a);color:#7dd3fc}
+button.pri,.btn.pri{background:var(--a);border-color:var(--a);color:#fff;font-weight:600}
+button.sm{min-height:34px;padding:0 10px;font-size:12px}
+.card{background:var(--p);border:1px solid var(--b);border-radius:16px;padding:12px;margin-bottom:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.sp{justify-content:space-between}
+.grid{display:grid;gap:10px}.g4{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}
+@media(min-width:800px){.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1fr 1fr}}
+.k{font-size:11px;color:var(--m);text-transform:uppercase;letter-spacing:.05em}.v{font:700 21px ui-monospace,Menlo,monospace}
+.m{color:var(--m);font-size:12px}h3{margin:0 0 6px;font-size:14px}
+.mono{font-family:ui-monospace,Menlo,monospace}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--b);white-space:nowrap}th{color:var(--m);font-weight:600}
+.sc{overflow-x:auto}tr.pk{cursor:pointer}tr.pk:hover{background:#ffffff08}
+canvas{width:100%;height:210px;display:block;touch-action:pan-y}
+.ro{font:11px ui-monospace,Menlo,monospace;color:var(--m);min-height:16px;margin-bottom:4px}
+.ev{border:1px solid;border-radius:14px;padding:11px;margin-bottom:8px}
+.ev.warn{background:#f59e0b14;border-color:#f59e0b66}.ev.crit{background:#f43f5e14;border-color:#f43f5e77}.ev.info{background:#009ada14;border-color:#009ada66}
+.tag{font:700 10px ui-monospace,monospace;padding:2px 7px;border-radius:6px;text-transform:uppercase;color:#000;background:var(--y)}
+.crit .tag{background:var(--r);color:#fff}.info .tag{background:#38bdf8}
+.ev ul{margin:6px 0 0;padding-left:16px;color:#cbd5e1;font-size:12px}
+.cy{border:1px solid var(--b);border-radius:12px;padding:8px;background:#0b1120}.bar{height:6px;border-radius:9px;background:var(--b);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%}
+.good{color:var(--g)}.bad{color:var(--r)}.mid{color:var(--y)}.A{color:#38bdf8}.B{color:var(--v)}
+#toast{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0));z-index:30;background:#0f172af5;border:1px solid #334155;border-radius:14px;padding:11px 14px;font-size:13px;display:none}
+dialog{background:var(--p);color:var(--t);border:1px solid #334155;border-radius:18px;width:min(640px,94vw);padding:14px}
+dialog::backdrop{background:#000c}
+textarea,input[type=text]{width:100%;background:#050810;color:var(--t);border:1px solid #334155;border-radius:12px;padding:10px;font:12px ui-monospace,monospace}
+.drop{outline:2px dashed var(--a)}
+</style>
+</head>
+<body>
+<header>
+  <h1>BM3 Lab<small>B48 · MG1 · G20</small></h1>
+  <div class="row"><button id="tOne" class="on">Анализ</button><button id="tCmp">Сравнение А vs Б</button></div>
+</header>
+<div class="wrap">
+  <div class="grid g2" id="slots"></div>
+  <div class="card" id="bar" style="display:none">
+    <div class="row sp">
+      <div class="row" id="modes"></div>
+      <div class="row">
+        <button class="sm" id="bCopy">Копирай отчет</button>
+        <select id="ai" class="sm" style="min-height:34px"><option value="https://claude.ai/new">Claude</option><option value="https://gemini.google.com/app">Gemini</option><option value="https://chatgpt.com/">ChatGPT</option></select>
+        <button class="sm pri" id="bAi">Анализ с AI</button>
+      </div>
+    </div>
+  </div>
+  <div id="view"></div>
+</div>
+<div id="toast"></div>
+<dialog id="dlg">
+  <h3 id="dT">Постави CSV</h3>
+  <input type="text" id="dN" aria-label="Име" style="margin-bottom:8px">
+  <textarea id="dX" rows="9" aria-label="CSV"></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:10px"><button id="dC">Отказ</button><button class="pri" id="dOk">Анализирай</button></div>
+</dialog>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const S={tab:'one',mode:'all',act:'A',L:{A:null,B:null},pull:{A:-1,B:-1},xr:null,paste:'A'};
+const PSI={PSI:1,Bar:14.5038,hPa:.0145038,kPa:.145038};
+const MODES={all:'Всички',wot:'Пълна газ ≥85%',comfort:'Comfort 1500–3200'};
+const E=v=>String(v??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const fx=(v,d=2,u='')=>v==null||!isFinite(v)?'—':v.toFixed(d)+u;
+const fin=v=>typeof v==='number'&&isFinite(v);
+const clean=h=>h.replace(/\[.*?\]|\(.*?\)/g,'').trim();
+let tt;const toast=(m)=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(tt);tt=setTimeout(()=>t.style.display='none',4200)};
+
+/* ---------- CSV ---------- */
+function csv(txt){
+  const L=txt.replace(/^\uFEFF/,'').trim().split(/\r?\n/);if(L.length<3)return null;
+  const sc=(L[0].match(/;/g)||[]).length>(L[0].match(/,/g)||[]).length,d=sc?';':',';
+  const H=L[0].split(d).map(s=>s.trim().replace(/^"|"$/g,'')),D={};
+  H.forEach(h=>D[h]=new Float64Array(L.length-1).fill(NaN));
+  let m=0;
+  for(let i=1;i<L.length;i++){
+    if(!L[i].trim())continue;const p=L[i].split(d);
+    for(let j=0;j<H.length;j++){let s=(p[j]||'').trim().replace(/^"|"$/g,'');if(sc)s=s.replace(',','.');D[H[j]][m]=s===''?NaN:Number(s)}
+    m++;
+  }
+  if(m<2)return null;
+  for(const h of H)D[h]=D[h].slice(0,m);
+  return{H,D,n:m};
+}
+function find(H,cands,ex=[]){for(const ks of cands)for(const h of H){const l=h.toLowerCase();if(ex.some(e=>l.includes(e)))continue;if(ks.every(k=>l.includes(k)))return h}return null}
+const TG=['target','tgt','desired','request'];
+function detect(H){
+  const cyl=[1,2,3,4].map(n=>{const re=new RegExp('cyl(?:inder)?\\.?\\s*0?'+n+'\\b','i');return H.find(x=>/timing|knock|retard/i.test(x)&&re.test(x))||null}).filter(Boolean);
+  const gen=H.filter(x=>{const l=x.toLowerCase();return(l.includes('timing')&&/cor|retard/.test(l))||l.includes('knock')});
+  return{time:H.find(x=>/^time\b/i.test(x))||find(H,[['time']],['timing']),rpm:find(H,[['engine speed'],['rpm']]),
+    accel:find(H,[['accel','pedal'],['pedal']]),thr:find(H,[['throttle']]),
+    ba:find(H,[['boost','actual'],['boost','mean'],['boost']],TG),bt:find(H,[['boost','target'],['target','boost'],['boost','desired']]),
+    iat:find(H,[['iat'],['intake air']]),hp:find(H,[['hpfp','actual'],['rail','actual'],['hpfp']],TG),ht:find(H,[['hpfp','target'],['rail','target']]),
+    afr:find(H,[['afr'],['lambda']]),tim:cyl.length?cyl:gen};
+}
+function build(name,P){
+  const{H,D,n}=P,c=detect(H),g=k=>k?D[k]:null;
+  const t=c.time?D[c.time]:Float64Array.from({length:n},(_,i)=>i*.05);
+  const L={name,n,c,t,dur:t[n-1]-t[0]};
+  const bk=c.ba||c.bt,bh=(bk||'').toLowerCase();
+  L.unit=/\bpsi\b/.test(bh)?'PSI':/\bhpa\b|mbar/.test(bh)?'hPa':/\bkpa\b/.test(bh)?'kPa':/\bbar\b/.test(bh)?'Bar':(()=>{let m=0;for(let i=0;i<Math.min(n,400);i++)if(D[bk][i]>m)m=D[bk][i];return m>500?'hPa':m>4.5?'PSI':'Bar'})();
+  if(!bk)L.unit='PSI';
+  L.k=PSI[L.unit];
+  const hh=(c.hp||'').toLowerCase();L.hu=(hh.match(/\b(bar|psi|kpa|mpa|hpa)\b/)||[])[1]||'';
+  L.load=g(c.accel)||g(c.thr);L.rpm=g(c.rpm);L.ba=g(c.ba);L.bt=g(c.bt);L.hp=g(c.hp);L.ht=g(c.ht);L.afr=g(c.afr);
+  const F=!!c.iat&&/(\[|\()\s*°?\s*f\s*(\]|\))|fahrenheit/i.test(c.iat);
+  L.iat=c.iat?Float64Array.from(D[c.iat],v=>F?(v-32)*5/9:v):null;
+  L.tm=c.tim.map(k=>D[k]);L.tn=c.tim.map(clean);
+  L.wt=new Float64Array(n).fill(NaN);
+  if(L.tm.length)for(let i=0;i<n;i++){let w=NaN;for(const a of L.tm)if(fin(a[i]))w=fin(w)?Math.min(w,a[i]):a[i];if(fin(w))L.wt[i]=Math.min(0,w)}
+  L.pulls=pulls(L);return L;
+}
+function stats(L,s,e){
+  let pk=null,gs=0,gn=0,w=0,fl=0,tn=0,hd=0,as=0,an=0;
+  for(let i=s;i<=e;i++){
+    if(L.ba){const b=L.ba[i]*L.k;if(fin(b)&&(pk==null||b>pk))pk=b}
+    if(L.ba&&L.bt){const d=(L.bt[i]-L.ba[i])*L.k;if(fin(d)){gs+=Math.max(0,d);gn++}}
+    const q=L.wt[i];if(fin(q)){tn++;if(q<w)w=q;if(q<=-3)fl++}
+    if(L.hp&&L.ht&&L.ht[i]>0){const d=(L.ht[i]-L.hp[i])/L.ht[i]*100;if(fin(d)&&d>hd)hd=d}
+    if(L.afr&&fin(L.afr[i])){as+=L.afr[i];an++}
+  }
+  return{s,e,t0:L.t[s],t1:L.t[e],dur:L.t[e]-L.t[s],r0:L.rpm?L.rpm[s]:NaN,r1:L.rpm?L.rpm[e]:NaN,pk,gap:gn?gs/gn:null,
+    w:tn?w:null,pl:tn?fl/tn*100:null,hd:L.hp&&L.ht?hd:null,i0:L.iat?L.iat[s]:NaN,i1:L.iat?L.iat[e]:NaN,afr:an?as/an:null};
+}
+function pulls(L){
+  if(!L.load)return[];const P=[];let s=-1,last=-1,gp=0;
+  const cl=()=>{if(s>=0&&L.t[last]-L.t[s]>=1)P.push(stats(L,s,last));s=-1;gp=0};
+  for(let i=0;i<L.n;i++){if(L.load[i]>=85){if(s<0)s=i;last=i;gp=0}else if(s>=0&&++gp>3)cl()}
+  cl();return P;
+}
+const longest=L=>L.pulls.reduce((b,p,i)=>b<0||p.dur>L.pulls[b].dur?i:b,-1);
+const sel=k=>{const L=S.L[k],p=S.pull[k];return p>=0&&L.pulls[p]?L.pulls[p]:stats(L,0,L.n-1)};
+function mask(L){
+  const m=new Uint8Array(L.n);
+  for(let i=0;i<L.n;i++){
+    if(S.mode==='all')m[i]=1;
+    else if(S.mode==='wot')m[i]=L.load&&L.load[i]>=85?1:0;
+    else m[i]=(!L.rpm||(L.rpm[i]>=1500&&L.rpm[i]<=3200))&&(!L.load||(L.load[i]>=15&&L.load[i]<=65))?1:0;
+  }
+  return m;
+}
+
+/* ---------- находки ---------- */
+function findings(L,m){
+  const I=[];for(let i=0;i<L.n;i++)if(m[i])I.push(i);const ev=[];if(!I.length)return ev;
+  const minLoad=S.mode==='comfort'?15:70,ld=i=>!L.load||L.load[i]>=minLoad;
+  const run=f=>{let b=null,c=0,s=0;I.forEach((i,j)=>{if(f(i)){if(!c)s=j;c++;if(!b||c>b.n)b={n:c,s,e:j}}else c=0});return b&&b.n>=3?{n:b.n,i:I[b.e]}:null};
+  const at=i=>fx(L.t[i],2,'s')+' · '+(L.rpm&&fin(L.rpm[i])?Math.round(L.rpm[i])+' RPM':'—');
+  let w=0,wi=-1,wk=0;
+  I.forEach(i=>L.tm.forEach((a,k)=>{if(a[i]<w){w=a[i];wi=i;wk=k}}));
+  if(wi>=0&&w<=-3){
+    const rp=run(i=>L.wt[i]<=-3),it=L.iat?L.iat[wi]:NaN,h=['Сигнал за наблюдение, не доказателство за детонация или дефект.','Сравни същия момент по цилиндър, обороти, товар, IAT, AFR и HPFP.'];
+    if(fin(it))h.push('IAT в момента: '+it.toFixed(1)+'°C.');
+    ev.push({s:w<=-5&&rp?'crit':'warn',i:wi,cat:'Timing',ti:'Корекция '+w.toFixed(2)+'° ('+L.tn[wk]+')',at:at(wi),tx:rp?'Повтаря се в '+rp.n+' последователни семпъла.':'Единична корекция на аванса.',h});
+  }
+  if(L.ba&&L.bt){
+    const thr={hPa:180,kPa:18,Bar:.18,PSI:2.5}[L.unit],r=run(i=>ld(i)&&L.bt[i]-L.ba[i]>thr);
+    if(r)ev.push({s:'warn',i:r.i,cat:'Boost',ti:'Изоставане на буста ~'+(L.bt[r.i]-L.ba[r.i]).toFixed(2)+' '+L.unit,at:at(r.i),tx:r.n+' последователни семпъла над прага (товар ≥'+minLoad+'%).',
+      h:S.mode==='comfort'?['Ниски обороти / частичен товар: провери преходните режими и wastegate управлението.','Сравни Target/Actual с педал, дросел и предавка.']:['Сравни Target/Actual с обороти, дросел и предавка.','Провери wastegate и херметичност (charge pipe, интеркулер).']});
+  }
+  if(L.hp&&L.ht){
+    const r=run(i=>ld(i)&&L.ht[i]>0&&(L.ht[i]-L.hp[i])/L.ht[i]>=.1);
+    if(r)ev.push({s:'warn',i:r.i,cat:'HPFP',ti:'HPFP изостава '+((L.ht[r.i]-L.hp[r.i])/L.ht[r.i]*100).toFixed(1)+'% от целта',at:at(r.i),tx:'Actual '+Math.round(L.hp[r.i])+' при Target '+Math.round(L.ht[r.i])+' '+L.hu+'.',h:['Сравни с AFR и корекциите на аванса в същия момент.']});
+  }else if(L.hp)ev.push({s:'info',i:-1,cat:'HPFP',ti:'HPFP проверката е пропусната',at:'—',tx:'Няма колона HPFP Target.',h:['Добави HPFP Target в логваните канали на BM3.']});
+  if(L.iat){
+    let p=-1;I.forEach(i=>{if(fin(L.iat[i])&&(p<0||L.iat[i]>L.iat[p]))p=i});
+    if(p>=0&&L.iat[p]>=55)ev.push({s:L.iat[p]>=60?'crit':'warn',i:p,cat:'IAT',ti:'Повишен IAT '+L.iat[p].toFixed(1)+'°C',at:at(p),tx:'Температурата на входящия въздух е повишена.',h:['Сравни IAT в началото и края на ускорението и как бързо пада след газта.']});
+  }
+  return ev;
+}
+
+/* ---------- графики (canvas, без библиотеки) ---------- */
+function chart(cv,cfg){
+  cv._c=cfg;const r=cv.getBoundingClientRect(),dp=devicePixelRatio||1,w=r.width,h=r.height;
+  cv.width=w*dp;cv.height=h*dp;const g=cv.getContext('2d');g.setTransform(dp,0,0,dp,0,0);
+  const two=cfg.S.some(s=>s.ax===1),pl=42,pr=two?42:8,pt=6,pb=18,W=w-pl-pr,H=h-pt-pb;
+  let x0=Infinity,x1=-Infinity;
+  if(cfg.xr)[x0,x1]=cfg.xr;else cfg.S.forEach(s=>{for(let i=0;i<s.x.length;i++){const v=s.x[i];if(v<x0)x0=v;if(v>x1)x1=v}});
+  if(!(x1>x0)){x1=x0+1}
+  const ax=[[Infinity,-Infinity],[Infinity,-Infinity]];
+  cfg.S.forEach(s=>{const a=ax[s.ax||0],st=Math.max(1,s.x.length/3000|0);for(let i=0;i<s.x.length;i+=st)if(s.x[i]>=x0&&s.x[i]<=x1&&fin(s.y[i])){if(s.y[i]<a[0])a[0]=s.y[i];if(s.y[i]>a[1])a[1]=s.y[i]}});
+  ax.forEach(a=>{if(!isFinite(a[0])){a[0]=0;a[1]=1}if(a[1]-a[0]<1e-6){a[1]=a[0]+1}const p=(a[1]-a[0])*.06;a[0]-=p;a[1]+=p});
+  cfg._l={pl,W,x0,x1};
+  const X=v=>pl+(v-x0)/(x1-x0)*W,Y=(v,k)=>pt+H-(v-ax[k][0])/(ax[k][1]-ax[k][0])*H;
+  g.font='10px ui-monospace,monospace';g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pt+H*i/4;g.strokeStyle='#1e293b';g.beginPath();g.moveTo(pl,y);g.lineTo(pl+W,y);g.stroke();
+    g.fillStyle='#94a3b8';g.textAlign='right';g.fillText((ax[0][1]-(ax[0][1]-ax[0][0])*i/4).toFixed(Math.abs(ax[0][1])<20?1:0),pl-4,y+3);
+    if(two){g.textAlign='left';g.fillStyle=cfg.S.find(s=>s.ax===1).c;g.fillText((ax[1][1]-(ax[1][1]-ax[1][0])*i/4).toFixed(Math.abs(ax[1][1])<20?1:0),pl+W+4,y+3)}
+  }
+  g.fillStyle='#94a3b8';g.textAlign='center';
+  for(let i=0;i<=4;i++){const v=x0+(x1-x0)*i/4;g.fillText(v.toFixed(cfg.xd??1),X(v),h-4)}
+  g.save();g.beginPath();g.rect(pl,pt,W,H);g.clip();
+  cfg.S.forEach(s=>{
+    g.strokeStyle=s.c;g.lineWidth=s.lw||1.6;g.setLineDash(s.dash?[5,4]:[]);g.beginPath();
+    const st=Math.max(1,s.x.length/(W*1.5)|0);let on=false;
+    for(let i=0;i<s.x.length;i+=st){
+      const y=s.y[i];if(!fin(y)||s.x[i]<x0-(x1-x0)*.02||s.x[i]>x1+(x1-x0)*.02){on=false;continue}
+      const px=X(s.x[i]),py=Y(y,s.ax||0);on?g.lineTo(px,py):g.moveTo(px,py);on=true;
+    }
+    g.stroke();
+  });
+  g.setLineDash([]);
+  if(cfg.cur!=null){const px=X(cfg.cur);g.strokeStyle='#e2e8f0aa';g.beginPath();g.moveTo(px,pt);g.lineTo(px,pt+H);g.stroke()}
+  g.restore();
+  const ro=cfg.ro&&document.getElementById(cfg.ro);
+  if(ro){
+    const part=cfg.S.map(s=>{
+      let v='—';
+      if(cfg.cur!=null){let b=-1,bd=Infinity;for(let i=0;i<s.x.length;i++){const d=Math.abs(s.x[i]-cfg.cur);if(d<bd){bd=d;b=i}}if(b>=0&&fin(s.y[b]))v=s.y[b].toFixed(Math.abs(s.y[b])<100?2:0)}
+      return`<span style="color:${s.c}">${E(s.n)} ${cfg.cur!=null?v:''}</span>`;
+    });
+    ro.innerHTML=(cfg.cur!=null?cfg.xl+' '+cfg.cur.toFixed(cfg.xd??1)+' · ':'')+part.join(' · ');
+  }
+}
+function hover(cv){
+  const mv=e=>{const c=cv._c,l=c&&c._l;if(!l)return;const r=cv.getBoundingClientRect();c.cur=l.x0+(e.clientX-r.left-l.pl)/l.W*(l.x1-l.x0);if(c.cur<l.x0||c.cur>l.x1)c.cur=null;chart(cv,c)};
+  cv.onpointermove=mv;cv.onpointerdown=mv;cv.onpointerleave=()=>{const c=cv._c;if(c){c.cur=null;chart(cv,c)}};
+}
+function mk(id,cfg){const cv=document.getElementById(id);if(!cv)return;Object.assign(cfg,{ro:id+'R'});chart(cv,cfg);hover(cv)}
+const ser=(x,y,c,n,o={})=>y?Object.assign({x,y,c,n},o):null;
+
+/* ---------- изгледи ---------- */
+const PC=['#38bdf8','#10b981','#f59e0b','#f43f5e'];
+function pullOpts(k){
+  const L=S.L[k];
+  return`<select data-pull="${k}" aria-label="Пул">${'<option value="-1"'+(S.pull[k]<0?' selected':'')+'>Целия лог</option>'+L.pulls.map((p,i)=>`<option value="${i}"${S.pull[k]===i?' selected':''}>Пул ${i+1} · ${fx(p.t0,1)}–${fx(p.t1,1)}s · ${fx(p.r0,0)}→${fx(p.r1,0)} RPM</option>`).join('')}</select>`;
+}
+function vOne(){
+  const L=S.L[S.act]||S.L.A||S.L.B;
+  if(!L)return`<div class="card"><h3>Зареди лог</h3><p class="m">Качи Bootmod3 CSV, постави текст или натисни „Пример“. Всичко се смята локално в браузъра.</p></div>`;
+  const m=mask(L),ev=findings(L,m);
+  let mr=null,mb=null,mt=null,mi=null,mh=null,w=null;const cm=L.tm.map(()=>0);
+  for(let i=0;i<L.n;i++){if(!m[i])continue;
+    if(L.rpm&&fin(L.rpm[i])&&(mr==null||L.rpm[i]>mr))mr=L.rpm[i];
+    if(L.ba&&fin(L.ba[i])&&(mb==null||L.ba[i]>mb))mb=L.ba[i];
+    if(L.bt&&fin(L.bt[i])&&(mt==null||L.bt[i]>mt))mt=L.bt[i];
+    if(L.iat&&fin(L.iat[i])&&(mi==null||L.iat[i]>mi))mi=L.iat[i];
+    if(L.hp&&L.hp[i]>0&&(mh==null||L.hp[i]<mh))mh=L.hp[i];
+    if(fin(L.wt[i])&&(w==null||L.wt[i]<w))w=L.wt[i];
+    L.tm.forEach((a,k)=>{if(a[i]<cm[k])cm[k]=a[i]});
+  }
+  const cls=v=>v==null?'':v<=-3?'bad':v<-1?'mid':'good';
+  const cyl=L.tm.map((a,k)=>`<div class="cy"><div class="m">${E(L.tn[k])}</div><div class="mono ${cls(cm[k])}" style="font-weight:700">${cm[k].toFixed(1)}°</div><div class="bar"><i style="width:${Math.max(5,Math.min(100,-cm[k]*14))}%;background:${cm[k]<=-3?'var(--r)':cm[k]<-1?'var(--y)':'var(--g)'}"></i></div></div>`).join('');
+  const shown=ev.filter(e=>e.s!=='info').length;
+  return`
+  <div class="row sp card"><div class="row"><span class="m">Активен лог:</span>${['A','B'].map(k=>`<button class="sm ${S.act===k?'on':''}" data-act="${k}">${k==='A'?'А':'Б'}</button>`).join('')}</div>
+    <span class="m mono">${m.reduce((a,b)=>a+b,0)} / ${L.n} семпъла · ${L.dur.toFixed(1)}s · ${L.unit}</span></div>
+  <div class="grid g4" style="margin-bottom:12px">
+    <div class="card" style="margin:0"><div class="k">Макс. RPM</div><div class="v">${fx(mr,0)}</div></div>
+    <div class="card" style="margin:0"><div class="k">Макс. буст</div><div class="v A">${fx(mb,2)}</div><div class="m">цел ${fx(mt,2)} ${L.unit}</div></div>
+    <div class="card" style="margin:0"><div class="k">Най-лош аванс</div><div class="v ${cls(w)}">${fx(w,2,'°')}</div></div>
+    <div class="card" style="margin:0"><div class="k">Макс. IAT</div><div class="v mid">${fx(mi,1,'°C')}</div><div class="m">HPFP мин ${fx(mh,0)} ${L.hu}</div></div>
+  </div>
+  ${L.pulls.length?`<div class="card"><div class="row sp"><h3>Пълна газ (пулове: ${L.pulls.length})</h3>${pullOpts(S.act)}</div><div class="sc"><table><tr><th>#</th><th>Време</th><th>RPM</th><th>Пик буст</th><th>Дефицит</th><th>Аванс</th><th>HPFP Δ</th><th>IAT</th></tr>${L.pulls.map((p,i)=>`<tr class="pk" data-p="${i}"><td>${i+1}</td><td>${fx(p.t0,1)}–${fx(p.t1,1)}s</td><td>${fx(p.r0,0)}→${fx(p.r1,0)}</td><td>${fx(p.pk,1)}</td><td>${fx(p.gap,2)}</td><td class="${cls(p.w)}">${fx(p.w,1,'°')}</td><td>${fx(p.hd,1,'%')}</td><td>${fx(p.i0,0)}→${fx(p.i1,0)}°</td></tr>`).join('')}</table></div></div>`:''}
+  <div class="grid g2"><div class="card" style="margin:0"><h3>Корекции по цилиндри</h3><div class="grid" style="grid-template-columns:repeat(4,1fr)">${cyl||'<span class="m">Няма колони за аванс</span>'}</div></div>
+  <div class="card" style="margin:0"><h3>Събития (${shown})</h3><p class="m" style="margin:0">Сигнали за наблюдение, не окончателна диагноза. Праг на аванса: -3°.</p></div></div>
+  <div style="margin-top:12px">${ev.length?ev.map((e,n)=>`<div class="ev ${e.s}"><div class="row sp"><span class="tag">${E(e.cat)}</span><span class="mono m">${E(e.at)}</span></div><b>${E(e.ti)}</b><div class="m">${E(e.tx)}</div><ul>${e.h.map(h=>'<li>'+E(h)+'</li>').join('')}</ul>${e.i>=0?`<button class="sm" style="margin-top:8px" data-ev="${n}">Покажи на графиката →</button>`:''}</div>`).join(''):'<div class="ev info"><b>Няма засечени отклонения по наличните правила</b><div class="m">Резултатът зависи от наличните канали и режима.</div></div>'}</div>
+  <div class="row sp" id="charts" style="margin:6px 0"><h3 style="margin:0">Графики</h3><div class="row"><span class="m" id="focus"></span><button class="sm" id="rz">Цял лог</button></div></div>
+  <div class="card"><h3>Буст и обороти</h3><div class="ro" id="c1R"></div><canvas id="c1"></canvas></div>
+  <div class="card"><h3>Корекции на аванса (°)</h3><div class="ro" id="c2R"></div><canvas id="c2"></canvas></div>
+  <div class="card"><h3>HPFP и IAT</h3><div class="ro" id="c3R"></div><canvas id="c3"></canvas></div>`;
+}
+function drawOne(){
+  const L=S.L[S.act]||S.L.A||S.L.B;if(!L)return;
+  const o={xr:S.xr,xl:'t',xd:2};
+  mk('c1',{...o,S:[ser(L.t,L.bt,'#94a3b8','Target',{dash:1}),ser(L.t,L.ba,'#009ada','Actual',{lw:2.2}),ser(L.t,L.rpm,'#f59e0b','RPM',{ax:1})].filter(Boolean)});
+  mk('c2',{...o,S:L.tm.map((a,k)=>ser(L.t,a,PC[k%4],L.tn[k]))});
+  mk('c3',{...o,S:[ser(L.t,L.hp,'#a78bfa','HPFP'),ser(L.t,L.ht,'#c4b5fd','Target',{dash:1,lw:1.2}),ser(L.t,L.iat,'#fb7185','IAT°C',{ax:1})].filter(Boolean)});
+}
+function vCmp(){
+  const A=S.L.A,B=S.L.B;
+  if(!A||!B)return`<div class="card"><h3>Нужни са два лога</h3><p class="m">Зареди Лог А и Лог Б (или „Пример“ и в двете). Сравнява се избран пул от всеки лог, а при липса на пулове — целият лог.</p></div>`;
+  const a=sel('A'),b=sel('B');let sa=0,sb=0;
+  const rows=[];
+  const R=(l,x,y,f,win)=>{let s='',t='Информативно';
+    if(win){const hi=win==='hi',u=x.v,v=y.v;if(u==null||v==null)t='Няма данни';else if(Math.abs(u-v)<(win==='hi'?.05:.05))t='Равни';else{const aw=hi?u>v:u<v;s=aw?'A':'B';t=aw?'Лог А':'Лог Б';aw?sa++:sb++}}
+    rows.push(`<tr><td>${E(l)}</td><td>${f(x)}</td><td>${f(y)}</td><td class="${s}">${E(t)}</td></tr>`)};
+  const o=(v)=>({v});
+  R('Най-лош аванс',o(a.w),o(b.w),x=>fx(x.v,2,'°'),'hi');
+  R('% семпли ≤ -3°',o(a.pl),o(b.pl),x=>fx(x.v,1,'%'),'lo');
+  R('Среден дефицит на буста (psi)',o(a.gap),o(b.gap),x=>fx(x.v,2),'lo');
+  R('Макс. изоставане на HPFP',o(a.hd),o(b.hd),x=>fx(x.v,1,'%'),'lo');
+  R('IAT в края',o(a.i1),o(b.i1),x=>fx(x.v,1,'°C'),'lo');
+  R('Пик буст (psi)',o(a.pk),o(b.pk),x=>fx(x.v,2));
+  R('Обороти',{r0:a.r0,r1:a.r1},{r0:b.r0,r1:b.r1},x=>fx(x.r0,0)+'→'+fx(x.r1,0));
+  R('Продължителност',o(a.dur),o(b.dur),x=>fx(x.v,1,'s'));
+  R('AFR средно',o(a.afr),o(b.afr),x=>fx(x.v,2));
+  const hd=sa===sb?`Близки (${sa} : ${sb})`:`По-благоприятен е Лог ${sa>sb?'А':'Б'} (${Math.max(sa,sb)} : ${Math.min(sa,sb)})`;
+  return`<div class="card"><div class="row sp"><span class="tag" style="background:#38bdf8">СРАВНЕНИЕ</span><b>${hd}</b></div><p class="m">Точкуват се нормализирани показатели (аванс, % корекции, дефицит на буста, HPFP, IAT). За честно сравнение избери пул при сходни условия.</p>
+  <div class="grid g2"><div><div class="k A">Лог А · ${E(S.L.A.name)}</div>${pullOpts('A')}</div><div><div class="k B">Лог Б · ${E(S.L.B.name)}</div>${pullOpts('B')}</div></div></div>
+  <div class="card sc"><table><tr><th>Показател</th><th class="A">А</th><th class="B">Б</th><th>По-добре</th></tr>${rows.join('')}</table></div>
+  <div class="card"><h3>Буст (psi)</h3><div class="ro" id="d1R"></div><canvas id="d1"></canvas></div>
+  <div class="card"><h3>Най-лоша корекция (°)</h3><div class="ro" id="d2R"></div><canvas id="d2"></canvas></div>`;
+}
+function drawCmp(){
+  const A=S.L.A,B=S.L.B;if(!A||!B)return;
+  const a=sel('A'),b=sel('B'),rpm=!!(A.rpm&&B.rpm);
+  const X=(L,p)=>rpm?L.rpm.subarray(p.s,p.e+1):Float64Array.from(L.t.subarray(p.s,p.e+1),v=>v-L.t[p.s]);
+  const Y=(L,p,arr,k=1)=>arr?Float64Array.from(arr.subarray(p.s,p.e+1),v=>v*k):null;
+  const xa=X(A,a),xb=X(B,b),o={xl:rpm?'RPM':'t',xd:rpm?0:1};
+  mk('d1',{...o,S:[ser(xa,Y(A,a,A.ba,A.k),'#38bdf8','А'),ser(xb,Y(B,b,B.ba,B.k),'#a78bfa','Б')].filter(Boolean)});
+  mk('d2',{...o,S:[ser(xa,Y(A,a,A.wt),'#38bdf8','А'),ser(xb,Y(B,b,B.wt),'#f43f5e','Б')].filter(Boolean)});
+}
+
+/* ---------- слотове / рендер ---------- */
+function slots(){
+  $('#slots').innerHTML=['A','B'].map(k=>`<div class="card" data-slot="${k}" style="margin:0"><div class="row sp"><b class="${k}">Лог ${k==='A'?'А':'Б'}</b><span class="m mono" id="sm${k}"></span></div><div class="m" id="sn${k}" style="margin:2px 0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+  <div class="row"><label class="btn pri" style="flex:1">Качи CSV<input type="file" data-f="${k}" accept=".csv,text/csv,text/plain,*/*" hidden></label><button data-ps="${k}">Постави</button><button data-sm="${k}">Пример</button><button data-cl="${k}">✕</button></div></div>`).join('');
+}
+function head(){
+  ['A','B'].forEach(k=>{const L=S.L[k];$('#sn'+k).textContent=L?L.name:'Не е зареден';$('#sm'+k).textContent=L?L.n+' реда · '+L.dur.toFixed(1)+'s':''});
+  $('#bar').style.display=S.L.A||S.L.B?'':'none';
+  $('#tOne').className=S.tab==='one'?'on':'';$('#tCmp').className=S.tab==='cmp'?'on':'';
+  $('#modes').innerHTML=Object.entries(MODES).map(([k,v])=>`<button class="sm ${S.mode===k?'on':''}" data-m="${k}">${v}</button>`).join('');
+}
+function render(){
+  head();$('#view').innerHTML=S.tab==='one'?vOne():vCmp();
+  S.tab==='one'?drawOne():drawCmp();
+}
+function setLog(k,name,txt){
+  const P=csv(txt);if(!P)return toast('Няма достатъчно числови редове.');
+  try{S.L[k]=build(name,P)}catch(e){return toast('Грешка при четене: '+e.message)}
+  S.pull[k]=longest(S.L[k]);S.act=k;S.xr=null;if(S.L.A&&S.L.B)S.tab='cmp';else S.tab='one';
+  render();toast('Зареден Лог '+(k==='A'?'А':'Б')+': '+S.L[k].n+' реда, '+S.L[k].pulls.length+' пула.');
+}
+function file(f,k){
+  if(!f)return;if(!f.size)return toast('Файлът е 0 байта — ползвай „Постави“.');
+  const r=new FileReader();r.onload=e=>setLog(k,f.name,String(e.target.result||''));r.readAsText(f);
+}
+
+/* ---------- отчет ---------- */
+function block(tag,k){
+  const L=S.L[k],m=mask(L),ev=findings(L,m),p=sel(k);
+  const o=[`${tag} ${L.name} — ${L.n} семпъла, ${L.pulls.length} пула`,
+   `Избран пул: ${fx(p.t0,1)}–${fx(p.t1,1)}s, ${fx(p.r0,0)}→${fx(p.r1,0)} RPM, пик буст ${fx(p.pk,2)} psi, дефицит ${fx(p.gap,2)} psi, най-лош аванс ${fx(p.w,2,'°')} (${fx(p.pl,1,'%')} семпли ≤ -3°), HPFP изоставане ${fx(p.hd,1,'%')}, IAT ${fx(p.i0,0)}→${fx(p.i1,0)}°C, AFR ${fx(p.afr,2)}`];
+  o.push(ev.length?'Събития:\n'+ev.map(e=>`- [${e.cat}] ${e.ti}${e.at!=='—'?' ('+e.at+')':''} — ${e.tx}`).join('\n'):'Събития: няма засечени по правилата');
+  return o.join('\n');
+}
+function report(){
+  const h='BMW B48 / Bootmod3 лог — режим: '+MODES[S.mode];
+  if(S.tab==='cmp'&&S.L.A&&S.L.B)return[h+' (сравнение)',block('ЛОГ А:','A'),block('ЛОГ Б:','B')].join('\n\n');
+  const k=S.L[S.act]?S.act:S.L.A?'A':S.L.B?'B':null;return k?h+'\n'+block('Лог',k):'';
+}
+function copy(t){
+  if(!t)return Promise.resolve(false);
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;top:-9999px';document.body.appendChild(a);a.select();let r=false;try{r=document.execCommand('copy')}catch(e){}a.remove();toast(r?'Отчетът е копиран.':'Неуспешно копиране.');return r};
+  return navigator.clipboard&&isSecureContext?navigator.clipboard.writeText(t).then(()=>{toast('Отчетът е копиран.');return true},fb):Promise.resolve(fb());
+}
+
+/* ---------- пример ---------- */
+function sample(v){
+  const H='Time,Engine speed[rpm],Accel. Pedal[%],Boost (Actual)[psi],Boost (Target)[psi],Timing Cor. Cyl 1[deg],Timing Cor. Cyl 2[deg],Timing Cor. Cyl 3[deg],Timing Cor. Cyl 4[deg],HPFP Actual[psi],HPFP Target[psi],AFR Actual,IAT[C]',R=[H],bad=v!=='B';
+  for(let i=0;i<360;i++){
+    const t=+(i*.05).toFixed(2),pull=(t>=3.5&&t<=7.5)||(t>=11&&t<=15);
+    const p=t<11?(t-3.5)/4:(t-11)/4;let rpm=1800+Math.sin(t)*200,pd=20,bt=5,ba=4.8;
+    if(pull){rpm=2700+p*3800;pd=99;bt=21-p*1.2;ba=Math.max(4,bt-(p<.15?(.15-p)*40:.35))}
+    else if(t>7.5&&t<11||t>15){rpm=Math.max(1200,2400-(t<11?t-7.5:t-15)*400);pd=10;bt=2;ba=2.3}
+    const w=bad&&pull&&p>.45,c3=w?-4.5*Math.min(1,(p-.45)/.2):0,c1=w?-1.5:0,c4=w&&p>.6?-1.1:0;
+    const ht=pull?4400:2950,ha=pull?ht-(bad&&p>.7?520:60):ht+Math.sin(t*3)*40,afr=pull?12.1+Math.sin(t*5)*.15:14.6,iat=(bad?34:30)+t*(bad?2.1:1.2);
+    R.push([t,rpm.toFixed(0),pd,ba.toFixed(2),bt.toFixed(2),c1,0,c3.toFixed(2),c4,ha.toFixed(0),ht,afr.toFixed(2),iat.toFixed(1)].join(','));
+  }
+  return R.join('\n');
+}
+
+/* ---------- събития ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,tr.pk');if(!t)return;
+  const d=t.dataset;
+  if(t.id==='tOne'){S.tab='one';render()}else if(t.id==='tCmp'){S.tab='cmp';render()}
+  else if(d.m){S.mode=d.m;render()}
+  else if(d.act){if(!S.L[d.act])return toast('Лог '+d.act+' не е зареден.');S.act=d.act;S.xr=null;render()}
+  else if(d.ps){S.paste=d.ps;$('#dT').textContent='Постави CSV за Лог '+(d.ps==='A'?'А':'Б');$('#dN').value='B48_Log_'+d.ps+'.csv';$('#dX').value='';$('#dlg').showModal()}
+  else if(d.sm)setLog(d.sm,'B48_Sample_'+d.sm+'.csv',sample(d.sm));
+  else if(d.cl){S.L[d.cl]=null;S.pull[d.cl]=-1;if(S.act===d.cl)S.act=d.cl==='A'?'B':'A';if(!S.L.A||!S.L.B)S.tab='one';render()}
+  else if(d.ev!=null){const L=S.L[S.act],ev=findings(L,mask(L))[+d.ev];if(ev&&ev.i>=0){const c=L.t[ev.i];S.xr=[c-3,c+3];$('#focus').textContent='▶ '+ev.cat+' '+ev.at;drawOne();$('#charts').scrollIntoView({behavior:'smooth'})}}
+  else if(t.matches('tr.pk')){S.pull[S.act]=+d.p;const p=S.L[S.act].pulls[+d.p];S.xr=[p.t0-.5,p.t1+.5];render();$('#charts').scrollIntoView({behavior:'smooth'})}
+  else if(t.id==='rz'){S.xr=null;$('#focus').textContent='';drawOne()}
+  else if(t.id==='bCopy')copy(report());
+  else if(t.id==='bAi'){const r=report();if(r)copy(r+'\n\nНаправи допълнителен анализ на данните и дай насоки за проверка.').then(()=>setTimeout(()=>open($('#ai').value,'_blank','noopener,noreferrer'),250))}
+  else if(t.id==='dC')$('#dlg').close();
+  else if(t.id==='dOk'){const x=$('#dX').value.trim();if(!x)return toast('Постави CSV съдържание.');let n=($('#dN').value||'Log.csv').trim();if(!/\.csv$/i.test(n))n+='.csv';$('#dlg').close();setLog(S.paste,n,x)}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.f){file(t.files[0],t.dataset.f);t.value=''}
+  else if(t.dataset.pull){const k=t.dataset.pull;S.pull[k]=+t.value;const p=S.L[k].pulls[S.pull[k]];S.xr=p&&S.tab==='one'?[p.t0-.5,p.t1+.5]:null;render()}
+});
+document.addEventListener('dragover',e=>{const s=e.target.closest('[data-slot]');if(s){e.preventDefault();s.classList.add('drop')}});
+document.addEventListener('dragleave',e=>{const s=e.target.closest('[data-slot]');if(s)s.classList.remove('drop')});
+document.addEventListener('drop',e=>{const s=e.target.closest('[data-slot]');if(s){e.preventDefault();s.classList.remove('drop');file(e.dataTransfer.files[0],s.dataset.slot)}});
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>S.tab==='one'?drawOne():drawCmp(),150)});
+
+slots();render();
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+})();
+</script>
+</body>
+</html>
