@@ -7,19 +7,34 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BM3 Lab">
+<meta name="apple-mobile-web-app-title" content="PITSTOP · BM3">
 <link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<title>BM3 Lab — B48 анализатор на логове</title>
+<title>PITSTOP · LOG — BM3 Lab: B48 анализатор на логове</title>
 <style>
 :root{--bg:#070b14;--p:#101726;--b:#1e293b;--t:#f1f5f9;--m:#94a3b8;--a:#009ada;--r:#f43f5e;--y:#f59e0b;--g:#10b981;--v:#a78bfa}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--t);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow-x:hidden}
 body{padding:var(--sat,0) 0 calc(2rem + env(safe-area-inset-bottom,0))}
 :root{--sat:env(safe-area-inset-top,0px)}
-header{position:sticky;top:0;z-index:5;background:#0b1220f2;backdrop-filter:blur(8px);border-bottom:1px solid var(--b);padding:calc(var(--sat) + 8px) 14px 8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
-header:after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#009ada,#1c69d4,#e22718)}
-h1{font-size:16px;margin:0}h1 small{color:var(--m);font-weight:400;font-size:11px;margin-left:6px}
+header{position:sticky;top:0;z-index:10;background:#080c16fa;backdrop-filter:blur(10px);border-bottom:1px solid #26354d;padding:calc(var(--sat) + 6px) 8px 8px;display:flex;flex-direction:column;gap:7px;align-items:stretch}
+header:after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#009ada,#38bdf8,#ef4444)}
+.brand-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;border-radius:16px;background:radial-gradient(circle at 12% 50%,#009ada2e,transparent 42%),radial-gradient(circle at 88% 50%,#ef444424,transparent 42%),linear-gradient(135deg,#0d1526 0%,#080d18 55%,#111b2e 100%);border:1px solid #2b3b56;padding:8px 12px;box-shadow:0 6px 22px #00000080,inset 0 1px 0 #ffffff14}
+.brand-left{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-badge{width:40px;height:40px;border-radius:12px;flex:0 0 auto;background:linear-gradient(145deg,#132238,#0a111e);border:1px solid #38bdf855;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 #ffffff1a,0 2px 8px #00000066}
+.brand-badge svg{width:24px;height:24px;display:block}
+.brand-titles{display:flex;flex-direction:column;min-width:0}
+.brand-name{font-size:17px;font-weight:800;letter-spacing:1.3px;line-height:1.1;background:linear-gradient(90deg,#fff 0%,#e2e8f0 65%,#7dd3fc 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.brand-sub{font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-pill{flex:0 0 auto;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:#7dd3fc;background:#009ada1c;border:1px solid #38bdf844;border-radius:999px;padding:4px 9px;white-space:nowrap}
+.nav-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;width:100%}
+.nav-tabs button{width:100%;min-height:36px;padding:0 8px;font-size:12px;font-weight:600;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;gap:5px;background:#111b2e;border:1px solid #293852;color:#cbd5e1}
+.nav-tabs button svg{width:13px;height:13px;flex:0 0 auto;opacity:.85}
+.nav-tabs button:hover{border-color:#009ada77;color:#f8fafc}
+.nav-tabs button.on{background:linear-gradient(180deg,#009ada3d,#009ada22);border-color:#38bdf8;color:#fff;box-shadow:0 2px 10px #009ada2b}
+.nav-tabs button.on svg{opacity:1;color:#38bdf8}
+@media(min-width:760px){header{padding:calc(var(--sat) + 9px) 16px 10px}.brand-banner{min-height:70px;padding:10px 18px}.brand-badge{width:46px;height:46px;border-radius:14px}.brand-badge svg{width:28px;height:28px}.brand-name{font-size:20px;letter-spacing:1.8px}.brand-sub{font-size:11px;letter-spacing:2px}.nav-tabs button{min-height:40px;font-size:13px}}
 main,.wrap{max-width:1100px;margin:0 auto;padding:12px 14px}
 button,select,.btn{font:inherit;min-height:42px;padding:0 13px;border-radius:12px;border:1px solid #334155;background:#1e293b;color:var(--t);cursor:pointer;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center}
 button.on{background:#009ada33;border-color:var(--a);color:#7dd3fc}
@@ -44,7 +59,7 @@ canvas{width:100%;height:210px;display:block;touch-action:pan-y}
 .cy{border:1px solid var(--b);border-radius:12px;padding:8px;background:#0b1120}.bar{height:6px;border-radius:9px;background:var(--b);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%}
 .good{color:var(--g)}.bad{color:var(--r)}.mid{color:var(--y)}.A{color:#38bdf8}.B{color:var(--v)}
 #toast{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0));z-index:30;background:#0f172af5;border:1px solid #334155;border-radius:14px;padding:11px 14px;font-size:13px;display:none}
-dialog{background:var(--p);color:var(--t);border:1px solid #334155;border-radius:18px;width:min(640px,94vw);padding:14px}
+dialog{background:var(--p);color:var(--t);border:1px solid #334155;border-radius:18px;width:min(640px,96vw);max-width:96vw;padding:15px;max-height:calc(100dvh - max(var(--sat),12px) - 24px);margin:max(var(--sat),12px) auto 12px;overflow-y:auto}
 dialog::backdrop{background:#000c}
 textarea,input[type=text]{width:100%;background:#050810;color:var(--t);border:1px solid #334155;border-radius:12px;padding:10px;font:12px ui-monospace,monospace}
 .drop{outline:2px dashed var(--a)}
@@ -52,8 +67,22 @@ textarea,input[type=text]{width:100%;background:#050810;color:var(--t);border:1p
 </head>
 <body>
 <header>
-  <h1>BM3 Lab<small>B48 · MG1 · G20</small></h1>
-  <div class="row"><button id="tOne" class="on">Анализ</button><button id="tCmp">Сравнение А vs Б</button></div>
+  <div class="brand-banner" aria-label="PITSTOP · LOG">
+    <div class="brand-left">
+      <div class="brand-badge" aria-hidden="true">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M5 17 A9.5 9.5 0 0 1 23 17" stroke="#64748b" stroke-width="2.2" stroke-linecap="round"/><path d="M18.5 7.8 A9.5 9.5 0 0 1 23 17" stroke="#38bdf8" stroke-width="2.4" stroke-linecap="round"/><path d="M14 17 L19.2 11.2" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/><circle cx="14" cy="17" r="2.3" fill="#f8fafc"/><path d="M7.5 22.5 H20.5" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div class="brand-titles">
+        <div class="brand-name">PITSTOP · LOG</div>
+        <div class="brand-sub">BM3 LAB · B48 TELEMETRY</div>
+      </div>
+    </div>
+    <div class="brand-pill">MG1 · G20</div>
+  </div>
+  <nav class="nav-tabs" aria-label="Основно меню">
+    <button type="button" id="tOne" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg><span>Анализ</span></button>
+    <button type="button" id="tCmp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20V7"/></svg><span>Сравнение А vs Б</span></button>
+  </nav>
 </header>
 <div class="wrap">
   <div class="grid g2" id="slots"></div>
@@ -112,10 +141,10 @@ function detect(H){
   const cyl=[1,2,3,4].map(n=>{const re=new RegExp('cyl(?:inder)?\\.?\\s*0?'+n+'\\b','i');return H.find(x=>/timing|knock|retard/i.test(x)&&re.test(x))||null}).filter(Boolean);
   const gen=H.filter(x=>{const l=x.toLowerCase();return(l.includes('timing')&&/cor|retard/.test(l))||l.includes('knock')});
   return{time:H.find(x=>/^time\b/i.test(x))||find(H,[['time']],['timing']),rpm:find(H,[['engine speed'],['rpm']]),
-    accel:find(H,[['accel','pedal'],['pedal']]),thr:find(H,[['throttle']]),
+    accel:find(H,[['accel','pedal'],['pedal']]),thr:find(H,[['throttle','angle'],['throttle']],['pre','boost']),knock:find(H,[['knock','detect']]),gear:H.find(x=>/^gear\b/i.test(x))||null,
     ba:find(H,[['boost','actual'],['boost','mean'],['boost']],TG),bt:find(H,[['boost','target'],['target','boost'],['boost','desired']]),
-    iat:find(H,[['iat'],['intake air']]),hp:find(H,[['hpfp','actual'],['rail','actual'],['hpfp']],TG),ht:find(H,[['hpfp','target'],['rail','target']]),
-    afr:find(H,[['afr'],['lambda']]),tim:cyl.length?cyl:gen};
+    iat:H.find(x=>/(^|[^a-z])iat([^a-z]|$)/i.test(x))||find(H,[['intake air']]),hp:find(H,[['hpfp','actual'],['rail','actual'],['hpfp']],TG),ht:find(H,[['hpfp','target'],['rail','target']]),
+    afr:find(H,[['lambda','act'],['lambda'],['afr']]),tim:cyl.length?cyl:gen};
 }
 function build(name,P){
   const{H,D,n}=P,c=detect(H),g=k=>k?D[k]:null;
@@ -126,7 +155,7 @@ function build(name,P){
   if(!bk)L.unit='PSI';
   L.k=PSI[L.unit];
   const hh=(c.hp||'').toLowerCase();L.hu=(hh.match(/\b(bar|psi|kpa|mpa|hpa)\b/)||[])[1]||'';
-  L.load=g(c.accel)||g(c.thr);L.rpm=g(c.rpm);L.ba=g(c.ba);L.bt=g(c.bt);L.hp=g(c.hp);L.ht=g(c.ht);L.afr=g(c.afr);
+  L.load=g(c.accel)||g(c.thr);L.rpm=g(c.rpm);L.ba=g(c.ba);L.bt=g(c.bt);L.hp=g(c.hp);L.ht=g(c.ht);L.afr=g(c.afr);L.kn=g(c.knock);L.gear=g(c.gear);L.th=g(c.thr);
   const F=!!c.iat&&/(\[|\()\s*°?\s*f\s*(\]|\))|fahrenheit/i.test(c.iat);
   L.iat=c.iat?Float64Array.from(D[c.iat],v=>F?(v-32)*5/9:v):null;
   L.tm=c.tim.map(k=>D[k]);L.tn=c.tim.map(clean);
@@ -178,10 +207,16 @@ function findings(L,m){
     ev.push({s:w<=-5&&rp?'crit':'warn',i:wi,cat:'Timing',ti:'Корекция '+w.toFixed(2)+'° ('+L.tn[wk]+')',at:at(wi),tx:rp?'Повтаря се в '+rp.n+' последователни семпъла.':'Единична корекция на аванса.',h});
   }
   if(L.ba&&L.bt){
-    const thr={hPa:180,kPa:18,Bar:.18,PSI:2.5}[L.unit],r=run(i=>ld(i)&&L.bt[i]-L.ba[i]>thr);
-    if(r)ev.push({s:'warn',i:r.i,cat:'Boost',ti:'Изоставане на буста ~'+(L.bt[r.i]-L.ba[r.i]).toFixed(2)+' '+L.unit,at:at(r.i),tx:r.n+' последователни семпъла над прага (товар ≥'+minLoad+'%).',
+    const thr={hPa:180,kPa:18,Bar:.18,PSI:2.5}[L.unit],sp=new Uint8Array(L.n),sh=new Uint8Array(L.n);let ok=0,pkT=0;
+    I.forEach(i=>{if(L.bt[i]>pkT)pkT=L.bt[i]});
+    for(let i=0;i<L.n;i++){if(!ld(i))ok=0;else if(!ok&&L.bt[i]>=.5*pkT&&L.ba[i]>=.9*L.bt[i])ok=1;sp[i]=ok}
+    if(L.gear)for(let i=1;i<L.n;i++)if(fin(L.gear[i])&&fin(L.gear[i-1])&&L.gear[i]!==L.gear[i-1]){
+      for(let j=i;j>=0&&L.t[i]-L.t[j]<=.6;j--)sh[j]=1;for(let j=i;j<L.n&&L.t[j]-L.t[i]<=.8;j++)sh[j]=1}
+    const r=run(i=>sp[i]&&!sh[i]&&(!L.th||L.th[i]>=85)&&L.bt[i]-L.ba[i]>thr);
+    if(r)ev.push({s:'warn',i:r.i,cat:'Boost',ti:'Изоставане на буста ~'+(L.bt[r.i]-L.ba[r.i]).toFixed(2)+' '+L.unit,at:at(r.i),tx:r.n+' последователни семпъла над прага след набран буст, извън превключване и при отворен дросел (товар ≥'+minLoad+'%).',
       h:S.mode==='comfort'?['Ниски обороти / частичен товар: провери преходните режими и wastegate управлението.','Сравни Target/Actual с педал, дросел и предавка.']:['Сравни Target/Actual с обороти, дросел и предавка.','Провери wastegate и херметичност (charge pipe, интеркулер).']});
   }
+  if(L.kn){let k=-1;I.forEach(i=>{if(L.kn[i]>0&&k<0)k=i});if(k>=0)ev.push({s:'warn',i:k,cat:'Knock',ti:'Knock Detected = '+L.kn[k],at:at(k),tx:'Флагът за детонация е вдигнат.',h:['Сравни с корекциите на аванса, IAT и AFR в същия момент.']})}
   if(L.hp&&L.ht){
     const r=run(i=>ld(i)&&L.ht[i]>0&&(L.ht[i]-L.hp[i])/L.ht[i]>=.1);
     if(r)ev.push({s:'warn',i:r.i,cat:'HPFP',ti:'HPFP изостава '+((L.ht[r.i]-L.hp[r.i])/L.ht[r.i]*100).toFixed(1)+'% от целта',at:at(r.i),tx:'Actual '+Math.round(L.hp[r.i])+' при Target '+Math.round(L.ht[r.i])+' '+L.hu+'.',h:['Сравни с AFR и корекциите на аванса в същия момент.']});
@@ -260,7 +295,7 @@ function vOne(){
     if(L.ba&&fin(L.ba[i])&&(mb==null||L.ba[i]>mb))mb=L.ba[i];
     if(L.bt&&fin(L.bt[i])&&(mt==null||L.bt[i]>mt))mt=L.bt[i];
     if(L.iat&&fin(L.iat[i])&&(mi==null||L.iat[i]>mi))mi=L.iat[i];
-    if(L.hp&&L.hp[i]>0&&(mh==null||L.hp[i]<mh))mh=L.hp[i];
+    if(L.hp&&L.hp[i]>0&&(!L.load||L.load[i]>=70)&&(mh==null||L.hp[i]<mh))mh=L.hp[i];
     if(fin(L.wt[i])&&(w==null||L.wt[i]<w))w=L.wt[i];
     L.tm.forEach((a,k)=>{if(a[i]<cm[k])cm[k]=a[i]});
   }
@@ -270,14 +305,13 @@ function vOne(){
   return`
   <div class="row sp card"><div class="row"><span class="m">Активен лог:</span>${['A','B'].map(k=>`<button class="sm ${S.act===k?'on':''}" data-act="${k}">${k==='A'?'А':'Б'}</button>`).join('')}</div>
     <span class="m mono">${m.reduce((a,b)=>a+b,0)} / ${L.n} семпъла · ${L.dur.toFixed(1)}s · ${L.unit}</span></div>
-  <div class="m" style="margin:-4px 0 10px">Картите и събитията са за избрания режим (<b>${E(MODES[S.mode])}</b>); таблицата с пуловете е винаги по целия лог.</div>
   <div class="grid g4" style="margin-bottom:12px">
     <div class="card" style="margin:0"><div class="k">Макс. RPM</div><div class="v">${fx(mr,0)}</div></div>
     <div class="card" style="margin:0"><div class="k">Макс. буст</div><div class="v A">${fx(mb,2)}</div><div class="m">цел ${fx(mt,2)} ${L.unit}</div></div>
     <div class="card" style="margin:0"><div class="k">Най-лош аванс</div><div class="v ${cls(w)}">${fx(w,2,'°')}</div></div>
-    <div class="card" style="margin:0"><div class="k">Макс. IAT</div><div class="v mid">${fx(mi,1,'°C')}</div><div class="m">HPFP мин ${fx(mh,0)} ${L.hu}</div></div>
+    <div class="card" style="margin:0"><div class="k">Макс. IAT</div><div class="v mid">${fx(mi,1,'°C')}</div><div class="m">HPFP мин (под товар) ${fx(mh,0)} ${L.hu}</div></div>
   </div>
-  ${L.pulls.length?`<div class="card"><div class="row sp"><h3>Пълна газ (пулове: ${L.pulls.length})</h3>${pullOpts(S.act)}</div><div class="sc"><table><tr><th>#</th><th>Време</th><th>RPM</th><th>Пик буст (psi)</th><th>Дефицит (psi)</th><th>Аванс</th><th>HPFP Δ</th><th>IAT</th></tr>${L.pulls.map((p,i)=>`<tr class="pk" data-p="${i}"><td>${i+1}</td><td>${fx(p.t0,1)}–${fx(p.t1,1)}s</td><td>${fx(p.r0,0)}→${fx(p.r1,0)}</td><td>${fx(p.pk,1)}</td><td>${fx(p.gap,2)}</td><td class="${cls(p.w)}">${fx(p.w,1,'°')}</td><td>${fx(p.hd,1,'%')}</td><td>${fx(p.i0,0)}→${fx(p.i1,0)}°</td></tr>`).join('')}</table></div></div>`:''}
+  ${L.pulls.length?`<div class="card"><div class="row sp"><h3>Пълна газ (пулове: ${L.pulls.length})</h3>${pullOpts(S.act)}</div><div class="sc"><table><tr><th>#</th><th>Време</th><th>RPM</th><th>Пик буст</th><th>Дефицит</th><th>Аванс</th><th>HPFP Δ</th><th>IAT</th></tr>${L.pulls.map((p,i)=>`<tr class="pk" data-p="${i}"><td>${i+1}</td><td>${fx(p.t0,1)}–${fx(p.t1,1)}s</td><td>${fx(p.r0,0)}→${fx(p.r1,0)}</td><td>${fx(p.pk,1)}</td><td>${fx(p.gap,2)}</td><td class="${cls(p.w)}">${fx(p.w,1,'°')}</td><td>${fx(p.hd,1,'%')}</td><td>${fx(p.i0,0)}→${fx(p.i1,0)}°</td></tr>`).join('')}</table></div></div>`:''}
   <div class="grid g2"><div class="card" style="margin:0"><h3>Корекции по цилиндри</h3><div class="grid" style="grid-template-columns:repeat(4,1fr)">${cyl||'<span class="m">Няма колони за аванс</span>'}</div></div>
   <div class="card" style="margin:0"><h3>Събития (${shown})</h3><p class="m" style="margin:0">Сигнали за наблюдение, не окончателна диагноза. Праг на аванса: -3°.</p></div></div>
   <div style="margin-top:12px">${ev.length?ev.map((e,n)=>`<div class="ev ${e.s}"><div class="row sp"><span class="tag">${E(e.cat)}</span><span class="mono m">${E(e.at)}</span></div><b>${E(e.ti)}</b><div class="m">${E(e.tx)}</div><ul>${e.h.map(h=>'<li>'+E(h)+'</li>').join('')}</ul>${e.i>=0?`<button class="sm" style="margin-top:8px" data-ev="${n}">Покажи на графиката →</button>`:''}</div>`).join(''):'<div class="ev info"><b>Няма засечени отклонения по наличните правила</b><div class="m">Резултатът зависи от наличните канали и режима.</div></div>'}</div>
@@ -296,7 +330,7 @@ function drawOne(){
 function vCmp(){
   const A=S.L.A,B=S.L.B;
   if(!A||!B)return`<div class="card"><h3>Нужни са два лога</h3><p class="m">Зареди Лог А и Лог Б (или „Пример“ и в двете). Сравнява се избран пул от всеки лог, а при липса на пулове — целият лог.</p></div>`;
-  const a=sel('A'),b=sel('B'),rpm=!!(A.rpm&&B.rpm),xLbl=rpm?'RPM':'време от началото на пула (s)';let sa=0,sb=0;
+  const a=sel('A'),b=sel('B');let sa=0,sb=0;
   const rows=[];
   const R=(l,x,y,f,win)=>{let s='',t='Информативно';
     if(win){const hi=win==='hi',u=x.v,v=y.v;if(u==null||v==null)t='Няма данни';else if(Math.abs(u-v)<(win==='hi'?.05:.05))t='Равни';else{const aw=hi?u>v:u<v;s=aw?'A':'B';t=aw?'Лог А':'Лог Б';aw?sa++:sb++}}
@@ -315,8 +349,8 @@ function vCmp(){
   return`<div class="card"><div class="row sp"><span class="tag" style="background:#38bdf8">СРАВНЕНИЕ</span><b>${hd}</b></div><p class="m">Точкуват се нормализирани показатели (аванс, % корекции, дефицит на буста, HPFP, IAT). За честно сравнение избери пул при сходни условия.</p>
   <div class="grid g2"><div><div class="k A">Лог А · ${E(S.L.A.name)}</div>${pullOpts('A')}</div><div><div class="k B">Лог Б · ${E(S.L.B.name)}</div>${pullOpts('B')}</div></div></div>
   <div class="card sc"><table><tr><th>Показател</th><th class="A">А</th><th class="B">Б</th><th>По-добре</th></tr>${rows.join('')}</table></div>
-  <div class="card"><h3>Буст (psi) · ос X: ${xLbl}</h3><div class="ro" id="d1R"></div><canvas id="d1"></canvas></div>
-  <div class="card"><h3>Най-лоша корекция (°) · ос X: ${xLbl}</h3><div class="ro" id="d2R"></div><canvas id="d2"></canvas></div>`;
+  <div class="card"><h3>Буст (psi)</h3><div class="ro" id="d1R"></div><canvas id="d1"></canvas></div>
+  <div class="card"><h3>Най-лоша корекция (°)</h3><div class="ro" id="d2R"></div><canvas id="d2"></canvas></div>`;
 }
 function drawCmp(){
   const A=S.L.A,B=S.L.B;if(!A||!B)return;
